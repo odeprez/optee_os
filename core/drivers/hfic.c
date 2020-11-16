@@ -87,6 +87,10 @@ void interrupt_main_handler(void)
 		return;
 	}
 
+	if (id == HF_MANAGED_EXIT_INTID) {
+		return;
+	}
+
 	itr_handle(id);
 	res = thread_hvc(HF_INTERRUPT_DEACTIVATE, id, id, 0);
 	assert(!res);

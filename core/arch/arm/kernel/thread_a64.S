@@ -1169,6 +1169,11 @@ END_FUNC el0_sync_abort
 	bl	dcache_op_louis
 	ic	iallu
 #endif
+
+#if defined(CFG_CORE_SEL2_SPMC) && defined(CFG_CORE_HAFNIUM_INTC)
+	bl	interrupt_main_handler
+#endif
+
 	/*
 	 * Mark current thread as suspended
 	 */

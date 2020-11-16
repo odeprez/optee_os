@@ -24,6 +24,7 @@
 	xlat-granule = <0>; /* 4KiB */
 	boot-order = <0>;
 	messaging-method = <0x3>; /* Direct request/response supported */
+	managed-exit; /* Managed exit supported */
 
 	device-regions {
 		compatible = "arm,ffa-manifest-device-regions";
