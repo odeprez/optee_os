@@ -92,6 +92,9 @@
  */
 #define OPTEE_FFA_SEC_CAP_ARG_OFFSET	BIT(0)
 
+/* Secure world supports asynchronous notification of normal world */
+#define OPTEE_FFA_SEC_CAP_ASYNC_NOTIF		BIT(5)
+
 #define OPTEE_FFA_EXCHANGE_CAPABILITIES OPTEE_FFA_BLOCKING_CALL(2)
 
 /*

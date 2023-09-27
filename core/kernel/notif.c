@@ -94,14 +94,21 @@ void notif_send_async(uint32_t value)
 {
 	uint32_t old_itr_status = 0;
 
+#if !defined(CFG_CORE_SEL2_SPMC)
 	static_assert(CFG_CORE_ASYNC_NOTIF_GIC_INTID >= GIC_PPI_BASE);
+#endif
 
 	assert(value <= NOTIF_ASYNC_VALUE_MAX);
 	old_itr_status = cpu_spin_lock_xsave(&notif_lock);
 
 	DMSG("0x%"PRIx32, value);
 	bit_set(notif_values, value);
+#if defined(CFG_CORE_SEL2_SPMC)
+	void spmc_set_notification(uint64_t bitmap);
+	spmc_set_notification(1ULL);
+#else
 	itr_raise_pi(CFG_CORE_ASYNC_NOTIF_GIC_INTID);
+#endif
 
 	cpu_spin_unlock_xrestore(&notif_lock, old_itr_status);
 }

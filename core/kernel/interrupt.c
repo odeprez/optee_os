@@ -121,6 +121,16 @@ void itr_disable(size_t it)
 	itr_main_chip->ops->disable(itr_main_chip, it);
 }
 
+void itr_mask(size_t it)
+{
+	itr_main_chip->ops->mask(itr_main_chip, it);
+}
+
+void itr_unmask(size_t it)
+{
+	itr_main_chip->ops->unmask(itr_main_chip, it);
+}
+
 void itr_raise_pi(size_t it)
 {
 	itr_main_chip->ops->raise_pi(itr_main_chip, it);

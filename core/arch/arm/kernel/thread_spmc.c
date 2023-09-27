@@ -18,6 +18,7 @@
 #include <kernel/thread_private.h>
 #include <kernel/thread_spmc.h>
 #include <kernel/virtualization.h>
+#include <kernel/notif.h>
 #include <mm/core_mmu.h>
 #include <mm/mobj.h>
 #include <optee_ffa.h>
@@ -638,7 +639,8 @@ static void handle_blocking_call(struct thread_smc_args *args)
 		spmc_set_args(args, FFA_MSG_SEND_DIRECT_RESP_32,
 			      swap_src_dst(args->a1), 0, 0,
 			      THREAD_RPC_MAX_NUM_PARAMS,
-			      OPTEE_FFA_SEC_CAP_ARG_OFFSET);
+			      OPTEE_FFA_SEC_CAP_ARG_OFFSET |
+			      OPTEE_FFA_SEC_CAP_ASYNC_NOTIF);
 		break;
 	case OPTEE_FFA_UNREGISTER_SHM:
 		spmc_set_args(args, FFA_MSG_SEND_DIRECT_RESP_32,
@@ -1355,6 +1357,7 @@ void thread_spmc_msg_recv(struct thread_smc_args *args)
 		EMSG("Unhandled FFA function ID %#"PRIx32, (uint32_t)args->a0);
 		spmc_set_args(args, FFA_ERROR, FFA_PARAM_MBZ, FFA_NOT_SUPPORTED,
 			      FFA_PARAM_MBZ, FFA_PARAM_MBZ, FFA_PARAM_MBZ);
+		panic();
 	}
 }
 
@@ -1721,6 +1724,29 @@ static void spmc_rxtx_map(struct ffa_rxtx *rxtx)
 	}
 }
 
+void spmc_set_notification(uint64_t bitmap)
+{
+	struct thread_smc_args args = {
+		.a0 = 0x84000081, /* NOTIFICATION SET */
+		.a1 = (((uint32_t)my_endpoint_id << 16) | 0),
+		.a2 = (uint32_t)(1UL << 1), /* global notification, delay notification interrupt */
+		.a3 = (uint32_t)bitmap & 0xffffffff, /* bitmap lo */
+		.a4 = (uint32_t)(bitmap >> 32), /* bitmap hi */
+	};
+
+
+	thread_smccc(&args);
+	if (!is_ffa_success(args.a0)) {
+		if (args.a0 == FFA_ERROR)
+			EMSG("notification set failed with error %ld", args.a2);
+		else
+			EMSG("notifcation set failed");
+		panic();
+	}
+
+	DMSG("ffa notif set %lx", args.a0);
+}
+
 static uint16_t get_my_id(void)
 {
 	struct thread_smc_args args = {
@@ -1942,6 +1968,13 @@ static TEE_Result spmc_init(void)
 	spmc_rxtx_map(&my_rxtx);
 	my_endpoint_id = get_my_id();
 	DMSG("My endpoint ID %#x", my_endpoint_id);
+
+	if (IS_ENABLED(CFG_CORE_ASYNC_NOTIF)) {
+		notif_deliver_atomic_event(NOTIF_EVENT_STARTED);
+	}
+
+	IMSG("Asynchronous notifications are %sabled.",
+	     IS_ENABLED(CFG_CORE_ASYNC_NOTIF) ? "en" : "dis");
 
 	return TEE_SUCCESS;
 }

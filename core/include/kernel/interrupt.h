@@ -172,6 +172,9 @@ void itr_add_type_prio(struct itr_handler *handler, uint32_t type,
 		       uint32_t prio);
 void itr_enable(size_t it);
 void itr_disable(size_t it);
+void itr_mask(size_t it);
+void itr_unmask(size_t it);
+
 /* raise the Peripheral Interrupt corresponding to the interrupt ID */
 void itr_raise_pi(size_t it);
 /*

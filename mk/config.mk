@@ -945,7 +945,7 @@ $(eval $(call cfg-depends-one,CFG_PAN,CFG_ARM64_core CFG_RV64_core CFG_RV32_core
 
 # CFG_CORE_ASYNC_NOTIF is defined by the platform to enable support
 # for sending asynchronous notifications to normal world. Note that an
-# interrupt ID must be configurged by the platform too. Currently is only
+# interrupt ID must be configured by the platform too. Currently is only
 # CFG_CORE_ASYNC_NOTIF_GIC_INTID defined.
 CFG_CORE_ASYNC_NOTIF ?= n
 

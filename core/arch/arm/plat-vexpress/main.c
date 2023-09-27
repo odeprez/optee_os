@@ -108,6 +108,7 @@ static enum itr_return console_itr_cb(struct itr_handler *h __maybe_unused)
 		 * Asynchronous notifications are enabled, lets read from
 		 * uart in the bottom half instead.
 		 */
+		itr_mask(IT_CONSOLE_UART);
 		itr_disable(IT_CONSOLE_UART);
 		notif_send_async(NOTIF_VALUE_DO_BOTTOM_HALF);
 	} else {
@@ -135,12 +136,15 @@ static void yielding_console_notif(struct notif_driver *ndrv __unused,
 {
 	switch (ev) {
 	case NOTIF_EVENT_DO_BOTTOM_HALF:
+		EMSG("%s NOTIF_EVENT_DO_BOTTOM_HALF", __func__);
 		read_console();
 		itr_enable(IT_CONSOLE_UART);
+		itr_unmask(IT_CONSOLE_UART);
 		break;
 	case NOTIF_EVENT_STOPPED:
 		DMSG("Asynchronous notifications stopped");
 		itr_enable(IT_CONSOLE_UART);
+		itr_unmask(IT_CONSOLE_UART);
 		break;
 	default:
 		EMSG("Unknown event %d", (int)ev);
@@ -156,6 +160,7 @@ static TEE_Result init_console_itr(void)
 {
 	itr_add(&console_itr);
 	itr_enable(IT_CONSOLE_UART);
+	itr_unmask(IT_CONSOLE_UART);
 	if (IS_ENABLED(CFG_CORE_ASYNC_NOTIF))
 		notif_register_driver(&console_notif);
 	return TEE_SUCCESS;

@@ -41,6 +41,27 @@ static void hfic_op_disable(struct itr_chip *chip __unused, size_t it)
 	assert(!res);
 }
 
+#define HF_INTERRUPT_RECONFIGURE (0xff09)
+#define INT_RECONFIGURE_STATUS (2)
+#define INT_STATUS_DISABLE (0)
+#define INT_STATUS_ENABLE (1)
+
+static void hfic_op_mask(struct itr_chip *chip __unused, size_t it)
+{
+	uint32_t res __maybe_unused = 0;
+	res = thread_hvc(HF_INTERRUPT_RECONFIGURE, it, INT_RECONFIGURE_STATUS,
+			 INT_STATUS_DISABLE);
+	assert(!res);
+}
+
+static void hfic_op_unmask(struct itr_chip *chip __unused, size_t it)
+{
+	uint32_t res __maybe_unused = 0;
+	res = thread_hvc(HF_INTERRUPT_RECONFIGURE, it, INT_RECONFIGURE_STATUS,
+			 INT_STATUS_ENABLE);
+	assert(!res);
+}
+
 static void hfic_op_raise_pi(struct itr_chip *chip __unused, size_t it __unused)
 {
 	panic();
@@ -60,8 +81,8 @@ static void hfic_op_set_affinity(struct itr_chip *chip __unused,
 
 static const struct itr_ops hfic_ops = {
 	.add = hfic_op_add,
-	.mask = hfic_op_disable,
-	.unmask = hfic_op_enable,
+	.mask = hfic_op_mask,
+	.unmask = hfic_op_unmask,
 	.enable = hfic_op_enable,
 	.disable = hfic_op_disable,
 	.raise_pi = hfic_op_raise_pi,
@@ -82,7 +103,7 @@ void interrupt_main_handler(void)
 	uint32_t res __maybe_unused = 0;
 
 	id = thread_hvc(HF_INTERRUPT_GET, 0, 0, 0);
-	if (id == HF_INVALID_INTID) {
+	if (id == HF_INVALID_INTID || id == 0xffff) {
 		DMSG("ignoring invalid interrupt %#"PRIx32, id);
 		return;
 	}
