@@ -1889,6 +1889,8 @@ struct mobj_ffa *thread_spmc_populate_mobj_from_rx(uint64_t cookie)
 		return NULL;
 	}
 
+	assert((retrieve_desc.mem_reg_attr & (1U << 6)) != 0);
+
 	descr_array = (void *)((vaddr_t)buf + retrieve_desc.mem_access_offs);
 	offs = READ_ONCE(descr_array->region_offs);
 	descr = (struct ffa_mem_region *)((vaddr_t)buf + offs);
